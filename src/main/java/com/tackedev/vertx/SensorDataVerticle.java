@@ -1,6 +1,7 @@
 package com.tackedev.vertx;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Future;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
@@ -14,7 +15,7 @@ public class SensorDataVerticle extends AbstractVerticle {
 
     @Override
     public void start() {
-        dao = TemperatureRecordDAO.getInstance(vertx);
+        dao = new ImplTemperatureRecordDAO(vertx);
 
         EventBus eventBus = vertx.eventBus();
         eventBus.consumer("sensor.updates", this::updateTemperature);
@@ -30,27 +31,19 @@ public class SensorDataVerticle extends AbstractVerticle {
 
         var record = new TemperatureRecord(id, temperature, time);
 
-        dao.save(record, asyncResult -> {
-            if (asyncResult.succeeded()) {
-                LOGGER.info("{} saved", id);
-            } else {
-                LOGGER.error("Saving {} fail :(", id);
-            }
-        });
+        Future<Integer> future = dao.save(record);
+        future
+            .onSuccess(effectedRows -> LOGGER.info("{} saved", id))
+            .onFailure(cause -> LOGGER.error("Saved temperature record fail caused by: {}", cause.toString()));
     }
 
     private void averageTemperature(Message<JsonObject> message) {
-        dao.getAverageTemperature(asyncResult -> {
-            if (asyncResult.succeeded()) {
-                var rowSet = asyncResult.result();
-                for (var row : rowSet) {
-                    double avgTemperature = row.getDouble(0);
-                    var payload = new JsonObject().put("average", avgTemperature);
-                    message.reply(payload);
-                }
-            } else {
-                LOGGER.error("Get average fail!");
-            }
-        });
+        Future<Double> future = dao.getAverageTemperature();
+        future
+            .onSuccess(avgTemperature -> {
+                var payload = new JsonObject().put("average", avgTemperature);
+                message.reply(payload);
+            })
+            .onFailure(cause -> LOGGER.error("Get average temperature fail caused by: {}", cause.toString()));
     }
 }

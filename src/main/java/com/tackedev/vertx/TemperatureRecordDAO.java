@@ -1,19 +1,11 @@
 package com.tackedev.vertx;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
+import io.vertx.core.Future;
 
 public interface TemperatureRecordDAO {
 
-    static TemperatureRecordDAO getInstance(Vertx vertx) {
-        return new ImplTemperatureRecordDAO(vertx);
-    }
+    Future<Integer> save(TemperatureRecord record);
 
-    void save(TemperatureRecord record, Handler<AsyncResult<RowSet<Row>>> handler);
-
-    void getAverageTemperature(Handler<AsyncResult<RowSet<Row>>> handler);
+    Future<Double> getAverageTemperature();
 
 }

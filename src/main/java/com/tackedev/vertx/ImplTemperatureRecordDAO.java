@@ -1,13 +1,9 @@
 package com.tackedev.vertx;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
+import io.vertx.core.*;
 import io.vertx.pgclient.PgConnectOptions;
 import io.vertx.pgclient.PgPool;
 import io.vertx.sqlclient.PoolOptions;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.SqlClient;
 import io.vertx.sqlclient.Tuple;
 
@@ -39,24 +35,45 @@ public class ImplTemperatureRecordDAO implements TemperatureRecordDAO {
     }
 
     @Override
-    public void save(TemperatureRecord record, Handler<AsyncResult<RowSet<Row>>> handler) {
+    public Future<Integer> save(TemperatureRecord record) {
         String queryString = "INSERT INTO temperature_record (id, value, time) " +
             "VALUES ($1, $2, $3) " +
             "ON CONFLICT ON CONSTRAINT temperature_record_pk " +
             "DO UPDATE SET id=$1, value=$2, time=$3";
 
+        Promise<Integer> promise = Promise.promise();
         pool.preparedQuery(queryString)
             .execute(
-                Tuple.of(record.getId(), record.getTemperature(),
-                record.getTime()), handler
+                Tuple.of(record.getId(), record.getTemperature(), record.getTime()),
+                asyncResult -> {
+                    if (asyncResult.succeeded()) {
+                        var rowSet = asyncResult.result();
+                        promise.complete(rowSet.rowCount());
+                    } else {
+                        promise.fail(asyncResult.cause());
+                    }
+                }
             );
+        return promise.future();
     }
 
     @Override
-    public void getAverageTemperature(Handler<AsyncResult<RowSet<Row>>> handler) {
+    public Future<Double> getAverageTemperature() {
         String queryString = "SELECT AVG(value) " +
             "FROM temperature_record";
 
-        pool.preparedQuery(queryString).execute(handler);
+        Promise<Double> promise = Promise.promise();
+        pool.preparedQuery(queryString).execute(asyncResult -> {
+            if (asyncResult.succeeded()) {
+                var rowSet = asyncResult.result();
+                for (var row : rowSet) {
+                    double avgTemperature = row.getDouble(0);
+                    promise.complete(avgTemperature);
+                }
+            } else {
+                promise.fail(asyncResult.cause());
+            }
+        });
+        return promise.future();
     }
 }
