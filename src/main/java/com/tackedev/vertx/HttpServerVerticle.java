@@ -34,17 +34,17 @@ public class HttpServerVerticle extends AbstractVerticle {
             .setChunked(true);
 
         MessageConsumer<JsonObject> consumer = vertx.eventBus().consumer("sensor.updates");
-        consumer.handler(msg -> {
-            response.write("event: update\n");
-            response.write("data: " + msg.body().encode() + "\n\n");
+        consumer.handler(message -> {
+            response.write("event: update\n" +
+                "data: " + message.body().encode() + "\n\n");
         });
 
         TimeoutStream ticks = vertx.periodicStream(1000);
         ticks.handler(id -> {
             vertx.eventBus().<JsonObject>request("sensor.average", "", asyncResult -> {
                 if (asyncResult.succeeded()) {
-                    response.write("event: average\n");
-                    response.write("data: " + asyncResult.result().body().encode() + "\n\n");
+                    response.write("event: average\n" +
+                        "data: " + asyncResult.result().body().encode() + "\n\n");
                 }
             });
         });

@@ -11,9 +11,6 @@ public class MainVerticle extends AbstractVerticle {
         vertx.deployVerticle("com.tackedev.vertx.HeatSensorVerticle", new DeploymentOptions().setInstances(4));
         vertx.deployVerticle("com.tackedev.vertx.ListenerVerticle");
         vertx.deployVerticle("com.tackedev.vertx.HttpServerVerticle");
-        vertx.deployVerticle(
-            "com.tackedev.vertx.SensorDataVerticle",
-            new DeploymentOptions().setWorker(true).setWorkerPoolSize(8)
-        );
+        vertx.deployVerticle("com.tackedev.vertx.SensorDataVerticle");
     }
 }

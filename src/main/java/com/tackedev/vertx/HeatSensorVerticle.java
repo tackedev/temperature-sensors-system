@@ -19,7 +19,7 @@ public class HeatSensorVerticle extends AbstractVerticle {
     private void updateTemperature(Long id) {
         temperature += delta() / 10;
 
-        JsonObject payload = new JsonObject()
+        var payload = new JsonObject()
             .put("id", sensorId)
             .put("temperature", temperature)
             .put("time", System.currentTimeMillis());
