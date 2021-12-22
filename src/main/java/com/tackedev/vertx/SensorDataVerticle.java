@@ -15,7 +15,7 @@ public class SensorDataVerticle extends AbstractVerticle {
 
     @Override
     public void start() {
-        dao = new ImplTemperatureRecordDAO(vertx);
+        dao = new ImplTemperatureRecordDAORedis(vertx);
 
         EventBus eventBus = vertx.eventBus();
         eventBus.consumer("sensor.updates", this::updateTemperature);
