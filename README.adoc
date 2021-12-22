@@ -1,6 +1,6 @@
 = Temperature-sensors
 
-image:https://img.shields.io/badge/vert.x-4.2.2-purple.svg[link="https://vertx.io"]
+image:https://img.shields.io/badge/vert.x-4.2.1-purple.svg[link="https://vertx.io"]
 
 This application was generated using http://start.vertx.io
 
