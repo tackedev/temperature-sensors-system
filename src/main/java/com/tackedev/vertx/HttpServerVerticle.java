@@ -10,7 +10,7 @@ import io.vertx.core.json.JsonObject;
 public class HttpServerVerticle extends AbstractVerticle {
 
     @Override
-    public void start() throws Exception {
+    public void start() {
         vertx.createHttpServer()
             .requestHandler(this::handler)
             .listen(config().getInteger("port", 8080));

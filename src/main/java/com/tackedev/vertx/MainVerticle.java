@@ -12,5 +12,6 @@ public class MainVerticle extends AbstractVerticle {
         vertx.deployVerticle("com.tackedev.vertx.ListenerVerticle");
         vertx.deployVerticle("com.tackedev.vertx.HttpServerVerticle");
         vertx.deployVerticle("com.tackedev.vertx.SensorDataVerticle");
+        vertx.deployVerticle("com.tackedev.vertx.RabbitMQConsumerVerticle");
     }
 }
