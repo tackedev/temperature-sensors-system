@@ -22,11 +22,12 @@ public class RabbitMQConsumerVerticle extends AbstractVerticle {
 
     @Override
     public void start() {
-        initRabbitMQClient().onSuccess(this::clientHandler);
+        createRabbitMQClient().onSuccess(this::producerHandler);
+
+        createRabbitMQClient().onSuccess(this::consumerHandler);
     }
 
-    private void clientHandler(RabbitMQClient client) {
-
+    private void producerHandler(RabbitMQClient client) {
         vertx.setPeriodic(2000, time -> {
             client.basicPublish("temperature.average", "average", Buffer.buffer(), publishResult -> {
                 if (publishResult.succeeded()) {
@@ -36,7 +37,9 @@ public class RabbitMQConsumerVerticle extends AbstractVerticle {
                 }
             });
         });
+    }
 
+    private void consumerHandler(RabbitMQClient client) {
         client.basicConsumer("average", consumerAsyncResult -> {
             RabbitMQConsumer consumer = consumerAsyncResult.result();
             consumer.handler(message -> {
@@ -50,7 +53,7 @@ public class RabbitMQConsumerVerticle extends AbstractVerticle {
         });
     }
 
-    private Future<RabbitMQClient> initRabbitMQClient() {
+    private Future<RabbitMQClient> createRabbitMQClient() {
         RabbitMQOptions options = new RabbitMQOptions()
             .setUser(RABBITMQ_USER)
             .setPassword(RABBITMQ_PASSWORD)
