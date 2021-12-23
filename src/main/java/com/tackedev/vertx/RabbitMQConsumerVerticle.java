@@ -5,6 +5,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rabbitmq.RabbitMQClient;
+import io.vertx.rabbitmq.RabbitMQConsumer;
 import io.vertx.rabbitmq.RabbitMQOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,20 +21,21 @@ public class RabbitMQConsumerVerticle extends AbstractVerticle {
 
     @Override
     public void start() {
-        initRabbitMQClient()
-            .onSuccess(client ->
-                client.basicConsumer("average")
-                    .onSuccess(consumer ->
-                        consumer.handler(message -> {
-                            vertx.eventBus().<JsonObject>request("sensor.average", "", asyncResult -> {
-                                if (asyncResult.succeeded()) {
+        initRabbitMQClient().onSuccess(this::clientHandler);
+    }
 
-                                }
-                            });
-                        })
-                    )
-                    .onFailure(cause -> LOGGER.error(cause.getMessage()))
-            );
+    private void clientHandler(RabbitMQClient client) {
+        client.basicConsumer("average", consumerAsyncResult -> {
+            RabbitMQConsumer consumer = consumerAsyncResult.result();
+            consumer.handler(message -> {
+                vertx.eventBus().<JsonObject>request("sensor.average", "", asyncResult -> {
+                    if (asyncResult.succeeded()) {
+                        double avgTemp = asyncResult.result().body().getDouble("average");
+                        LOGGER.info("Average Temperature: {}", avgTemp);
+                    }
+                });
+            });
+        });
     }
 
     private Future<RabbitMQClient> initRabbitMQClient() {
