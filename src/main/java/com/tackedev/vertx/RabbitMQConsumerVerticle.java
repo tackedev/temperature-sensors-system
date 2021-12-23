@@ -3,6 +3,7 @@ package com.tackedev.vertx;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rabbitmq.RabbitMQClient;
 import io.vertx.rabbitmq.RabbitMQConsumer;
@@ -25,6 +26,17 @@ public class RabbitMQConsumerVerticle extends AbstractVerticle {
     }
 
     private void clientHandler(RabbitMQClient client) {
+
+        vertx.setPeriodic(2000, time -> {
+            client.basicPublish("temperature.average", "average", Buffer.buffer(), publishResult -> {
+                if (publishResult.succeeded()) {
+                    LOGGER.info("Sent message to Exchange!");
+                } else {
+                    LOGGER.error("Fail to send message: {}", publishResult.cause().getMessage());
+                }
+            });
+        });
+
         client.basicConsumer("average", consumerAsyncResult -> {
             RabbitMQConsumer consumer = consumerAsyncResult.result();
             consumer.handler(message -> {
